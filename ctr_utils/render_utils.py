@@ -7,9 +7,11 @@ This class renders the current state of the robot system using matplotlib in 3d.
 ctr_reach_env.py.
 '''
 
-
 class Rendering(object):
     def __init__(self):
+        # Removed shortcuts for keyboard control
+        plt.rcParams['keymap.save'].remove('s')
+        plt.rcParams['keymap.fullscreen'].remove('f')
         # Create a figure on screen and set the title
         fig = plt.figure()
         # Show the graph without blocking the rest of the program

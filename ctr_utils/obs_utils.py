@@ -1,9 +1,15 @@
 import numpy as np
+from collections import OrderedDict
+
+KEY_ORDER = ['observation', 'achieved_goal', 'desired_goal']
 
 
-def get_obs(joints, desired_goal, achieved_goal, goal_tolerance, min_max_goal_tolerance,
+def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, min_max_goal_tolerance,
             tube_length):
     """
+    :param tube_length:
+    :param min_max_goal_tolerance:
+    :param joint_representation:
     :param joints: CTR joints represented as beta_0, beta_1, beta_2, alpha_0, alpha_1, alpha_2
     :param desired_goal: The desired goal of the current episodes
     :param achieved_goal: End-effector position of the robot
@@ -13,12 +19,15 @@ def get_obs(joints, desired_goal, achieved_goal, goal_tolerance, min_max_goal_to
     num_tubes = 3
     # TODO: Min and max delta goal assumption
     min_max_delta_goals = np.array([[-0.5, -0.5, 0.0], [0.5, 0.5, 1.0]])
-    # Convert joints to egocentric normalized representation
-    ego_joints = prop2ego(joints, num_tubes)
-    ego_joints[num_tubes:] = B_to_B_U(ego_joints[num_tubes:], tube_length[0], tube_length[1], tube_length[2])
-    joint_rep = joint2rep(ego_joints, num_tubes)
+    # Convert joints to egocentric representation
+    joints = np.copy(joints)
+    if joint_representation == 'egocentric':
+        joints = prop2ego(joints, num_tubes)
 
-    # Normalize desired and achieve goals
+    joints[:num_tubes] = B_to_B_U(joints[:num_tubes], tube_length[0], tube_length[1], tube_length[2])
+    joint_rep = joint2rep(joints, num_tubes)
+
+    # Normalize desired and achieve goals (TODO: Need to include desired and achieved goal in obs to obs_dict)
     norm_dg = normalize(min_max_delta_goals[0], min_max_delta_goals[1], desired_goal)
     norm_ag = normalize(min_max_delta_goals[0], min_max_delta_goals[1], achieved_goal)
     # Normalize goal tolerance
@@ -26,6 +35,26 @@ def get_obs(joints, desired_goal, achieved_goal, goal_tolerance, min_max_goal_to
     # Concatenate all and return
     return np.concatenate((joint_rep, norm_dg - norm_ag, norm_tol))
 
+
+def convert_dict_to_obs(obs_dict):
+    """
+    :param obs_dict: (dict<np.ndarray>)
+    :return: (np.ndarray)
+    """
+    return np.concatenate([obs_dict[key] for key in KEY_ORDER])
+
+
+def convert_obs_to_dict(observations, achieved_goal, desired_goal):
+    """
+    Inverse operation of convert_dict_to_obs
+    :param observations: (np.ndarray)
+    :return: (OrderedDict<np.ndarray>)
+    """
+    return OrderedDict([
+        ('observation', observations),
+        ('achieved_goal', achieved_goal),
+        ('desired_goal', desired_goal),
+    ])
 
 def normalize(x_min, x_max, x):
     """
@@ -51,12 +80,13 @@ def apply_action(action, extension_limit, rotation_limit, joints, tube_length):
     :return: joints returned
     """
     num_tubes = 3
+    joints = np.copy(joints)
     action[:num_tubes] = action[:num_tubes] * extension_limit
     action[num_tubes:] = action[num_tubes:] * rotation_limit
     joints_low = np.array([-tube_length[0], -tube_length[1], -tube_length[2], -np.inf, -np.inf, -np.inf])
     joints_high = np.array([0.0, 0.0, 0.0, np.inf, np.inf, np.inf])
     # Apply action and ensure within joint limits
-    new_joints = np.clip(np.around(joints + action, 6), joints_low, joints_high)
+    new_joints = np.clip(joints + action, joints_low, joints_high)
     # Check if extension joints are not colliding
     betas_U = B_to_B_U(new_joints[:num_tubes], tube_length[0], tube_length[1], tube_length[2])
     # Check if beta extension are within limits, if not, return old joints
@@ -194,8 +224,8 @@ def sample_joints(tube_length):
 
 def flip_joints(joints):
     num_tubes = 3
-    betas = joints[:num_tubes]
-    alphas = joints[num_tubes:]
+    betas = np.flip(joints[:num_tubes])
+    alphas = np.flip(joints[num_tubes:])
     return np.concatenate((betas, alphas))
 
 
