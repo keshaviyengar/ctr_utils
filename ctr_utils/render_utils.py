@@ -10,19 +10,27 @@ ctr_reach_env.py.
 class Rendering(object):
     def __init__(self):
         # Removed shortcuts for keyboard control
-        plt.rcParams['keymap.save'].remove('s')
-        plt.rcParams['keymap.fullscreen'].remove('f')
+        #plt.rcParams['keymap.save'].remove('s')
+        #plt.rcParams['keymap.fullscreen'].remove('f')
         # Create a figure on screen and set the title
         fig = plt.figure()
         # Show the graph without blocking the rest of the program
         plt.show(block=False)
         self.ax3d = plt.axes(projection='3d')
 
-    def render(self, achieved_goal, desired_goal, r1, r2, r3):
-        # Plot the tubes with different colors
-        self.ax3d.plot3D(r1[:, 0] * 1000, r1[:, 1] * 1000, r1[:, 2] * 1000, linewidth=2.0, c='#2596BE')
-        self.ax3d.plot3D(r2[:, 0] * 1000, r2[:, 1] * 1000, r2[:, 2] * 1000, linewidth=3.0, c='#D62728')
-        self.ax3d.plot3D(r3[:, 0] * 1000, r3[:, 1] * 1000, r3[:, 2] * 1000, linewidth=4.0, c='#2Ca02C')
+    def render(self, achieved_goal, desired_goal, *r_args):
+        num_tubes = len(r_args)
+        assert num_tubes in [2,3]
+        if num_tubes == 2:
+            r, _ = r_args
+            self.ax3d.plot3D(r[:, 0] * 1000, r[:, 1] * 1000, r[:, 2] * 1000, linewidth=2.0, c='#2596BE')
+            #self.ax3d.plot3D(r2[:, 0] * 1000, r2[:, 1] * 1000, r2[:, 2] * 1000, linewidth=3.0, c='#2Ca02C')
+        else:
+            # Plot the tubes with different colors
+            (r1, r2, r3) = r_args
+            self.ax3d.plot3D(r1[:, 0] * 1000, r1[:, 1] * 1000, r1[:, 2] * 1000, linewidth=2.0, c='#2596BE')
+            self.ax3d.plot3D(r2[:, 0] * 1000, r2[:, 1] * 1000, r2[:, 2] * 1000, linewidth=3.0, c='#D62728')
+            self.ax3d.plot3D(r3[:, 0] * 1000, r3[:, 1] * 1000, r3[:, 2] * 1000, linewidth=4.0, c='#2Ca02C')
         ag = np.array(achieved_goal) * 1000
         dg = np.array(desired_goal) * 1000
         # Plot achieved and desired goal
