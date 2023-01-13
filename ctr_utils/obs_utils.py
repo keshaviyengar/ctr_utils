@@ -25,7 +25,7 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     # Convert joints to egocentric representation
     joints = np.copy(joints)
     if joint_representation == 'egocentric':
-        joints = prop2ego(joints, num_tubes)
+        joints = prop2ego(joints)
 
     if num_tubes == 2:
         joints[:num_tubes] = B_to_B_U(joints[:num_tubes], tube_length[0], tube_length[1])
