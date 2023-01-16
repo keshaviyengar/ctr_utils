@@ -4,8 +4,7 @@ from collections import OrderedDict
 KEY_ORDER = ['observation', 'achieved_goal', 'desired_goal']
 
 
-def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, min_max_goal_tolerance,
-            tube_length):
+def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, tube_length):
     """
     :param tube_length:
     :param min_max_goal_tolerance:
@@ -13,7 +12,7 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     :param joints: CTR joints represented as beta_0, beta_1, beta_2, alpha_0, alpha_1, alpha_2
     :param desired_goal: The desired goal of the current episodes
     :param achieved_goal: End-effector position of the robot
-    :param goal_tolerance: Current goal tolerance of episode
+    :param goal_tolerance: goal tolerance object
     :return: Observation of robot.
     """
     num_tubes = len(tube_length)
@@ -37,7 +36,7 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     norm_dg = normalize(min_max_delta_goals[0], min_max_delta_goals[1], desired_goal)
     norm_ag = normalize(min_max_delta_goals[0], min_max_delta_goals[1], achieved_goal)
     # Normalize goal tolerance
-    norm_tol = np.array([normalize(min_max_goal_tolerance[0], min_max_goal_tolerance[1], goal_tolerance)])
+    norm_tol = np.array([normalize(goal_tolerance.final_tol, goal_tolerance.init_tol, goal_tolerance.current_tol)])
     # Concatenate all and return
     return np.concatenate((joint_rep, norm_dg - norm_ag, norm_tol))
 

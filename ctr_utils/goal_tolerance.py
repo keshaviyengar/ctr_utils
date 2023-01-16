@@ -21,13 +21,13 @@ class GoalTolerance(object):
             self.b = self.init_tol
 
         if self.function == 'decay':
-            self.a = self.init_tol
+            self.a = np.copy(self.init_tol)
             self.r = 1 - np.power((self.final_tol / self.init_tol), 1 / self.N_ts)
 
         if evaluation:
             self.current_tol = eval_tol
         else:
-            self.current_tol = initial_tol
+            self.current_tol = np.copy(initial_tol)
         self.training_step = 0
 
     def update(self, timestep):
