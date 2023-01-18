@@ -39,9 +39,9 @@ class GoalTolerance(object):
         if self.evaluation:
             self.current_tol = self.eval_tol
         else:
-            if (self.function == 'linear') and (timestep <= self.N_ts):
+            if (self.function == 'linear') and (timestep < self.N_ts):
                 self.current_tol = self.a * timestep + self.b
-            elif (self.function == 'decay') and (timestep <= self.N_ts):
+            elif (self.function == 'decay') and (timestep < self.N_ts):
                 self.current_tol = self.a * np.power(1 - self.r, timestep)
             else:
                 self.current_tol = self.final_tol
