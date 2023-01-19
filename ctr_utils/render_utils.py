@@ -22,9 +22,9 @@ class Rendering(object):
         num_tubes = len(r_args)
         assert num_tubes in [2,3]
         if num_tubes == 2:
-            r, _ = r_args
-            self.ax3d.plot3D(r[:, 0] * 1000, r[:, 1] * 1000, r[:, 2] * 1000, linewidth=2.0, c='#2596BE')
-            #self.ax3d.plot3D(r2[:, 0] * 1000, r2[:, 1] * 1000, r2[:, 2] * 1000, linewidth=3.0, c='#2Ca02C')
+            (r1, r2) = r_args
+            self.ax3d.plot3D(r1[:, 0] * 1000, r1[:, 1] * 1000, r1[:, 2] * 1000, linewidth=2.0, c='#2596BE')
+            self.ax3d.plot3D(r2[:, 0] * 1000, r2[:, 1] * 1000, r2[:, 2] * 1000, linewidth=3.0, c='#2Ca02C')
         else:
             # Plot the tubes with different colors
             (r1, r2, r3) = r_args

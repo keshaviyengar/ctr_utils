@@ -80,11 +80,14 @@ def normalize(x_min, x_max, x):
         assert np.any(x >= x_min), "Values smaller than x_min"
         return 2 * np.divide(x - x_min, x_max - x_min) - 1
     else:
-        if x_min == x_max:
+        try:
+            assert x_min != x_max, "x_min and and x_max are equal. Will cause divide by zero error."
+        except ValueError:
+            print("Not a single value...")
             print("x_min: " + str(x_min))
+            print(str(type(x_min)))
             print("x_max: " + str(x_max))
-            print("x: " + str(x))
-        assert x_min != x_max, "x_min and and x_max are equal. Will cause divide by zero error."
+            print(str(type(x_max)))
         assert x <= x_max, "Values larger than x_max"
         assert x >= x_min, "Values smaller than x_min"
         return 2 * (x - x_min) / (x_max - x_min) - 1
