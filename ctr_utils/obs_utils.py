@@ -4,7 +4,7 @@ from collections import OrderedDict
 KEY_ORDER = ['observation', 'achieved_goal', 'desired_goal']
 
 
-def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, tube_length):
+def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, tube_length, normalize_goals=False):
     """
     :param tube_length:
     :param min_max_goal_tolerance:
@@ -17,11 +17,6 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     """
     num_tubes = len(tube_length)
     assert num_tubes in [2, 3]
-    # TODO: Min and max delta goal assumption
-    x_y_max = 2.0
-    z_max = 4.0
-    delta_goals_min = np.array([-x_y_max, -x_y_max, 0.0])
-    delta_goals_max = np.array([x_y_max, x_y_max, z_max])
     # Convert joints to egocentric representation
     joints = np.copy(joints)
     if joint_representation == 'egocentric':
@@ -34,12 +29,20 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     joint_rep = joint2rep(joints)
 
     # Normalize desired and achieve goals
-    norm_dg = normalize(delta_goals_min, delta_goals_max, desired_goal)
-    norm_ag = normalize(delta_goals_min, delta_goals_max, achieved_goal)
-    # Normalize goal tolerance
-    norm_tol = np.array([normalize(goal_tolerance.final_tol, goal_tolerance.init_tol, goal_tolerance.current_tol)])
+    current_tol = np.array([goal_tolerance.current_tol])
+    if normalize_goals:
+        # TODO: Min and max delta goal assumption
+        x_y_max = 2.0
+        z_max = 4.0
+        delta_goals_min = np.array([-x_y_max, -x_y_max, 0.0])
+        delta_goals_max = np.array([x_y_max, x_y_max, z_max])
+        desired_goal = normalize(delta_goals_min, delta_goals_max, desired_goal)
+        achieved_goal = normalize(delta_goals_min, delta_goals_max, achieved_goal)
+        # Normalize goal tolerance
+        current_tol = normalize(goal_tolerance.final_tol, goal_tolerance.init_tol, current_tol)
+
     # Concatenate all and return
-    return np.concatenate((joint_rep, norm_dg - norm_ag, norm_tol))
+    return np.concatenate((joint_rep, desired_goal - achieved_goal, current_tol))
 
 
 def convert_dict_to_obs(obs_dict):
@@ -80,16 +83,7 @@ def normalize(x_min, x_max, x):
         assert np.any(x >= x_min), "Values smaller than x_min"
         return 2 * np.divide(x - x_min, x_max - x_min) - 1
     else:
-        try:
-            assert x_min != x_max, "x_min and and x_max are equal. Will cause divide by zero error."
-        except ValueError:
-            print("Not a single value...")
-            print("x_min: " + str(x_min))
-            print(str(type(x_min)))
-            print("x_max: " + str(x_max))
-            print(str(type(x_max)))
-            print("x: " + str(x))
-            print(str(type(x)))
+        assert x_min != x_max, "x_min and and x_max are equal. Will cause divide by zero error."
         assert x <= x_max, "Values larger than x_max"
         assert x >= x_min, "Values smaller than x_min"
         return 2 * (x - x_min) / (x_max - x_min) - 1
