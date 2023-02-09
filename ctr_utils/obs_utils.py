@@ -294,16 +294,18 @@ def alpha_to_alpha_U(alpha, alpha_max):
     return 1. / alpha_max * alpha
 
 
-def sample_joints(tube_length):
+def sample_joints(tube_length, max_retraction, home_offset, max_rotation):
+    # Adjust sampling based on max rotation and home offset
     num_tubes = len(tube_length)
     assert num_tubes in [2, 3]
     if num_tubes == 2:
-        betas = B_U_to_B(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), tube_length[0],
-                         tube_length[1])
+        betas = B_U_to_B(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), max_retraction[0],
+                         max_retraction[1])
     else:
-        betas = B_U_to_B(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), tube_length[0],
-                         tube_length[1], tube_length[2])
-    alphas = alpha_U_to_alpha(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), np.pi)
+        betas = B_U_to_B(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), max_retraction[0],
+                         max_retraction[1], max_retraction[2])
+    betas = betas - home_offset
+    alphas = alpha_U_to_alpha(np.random.uniform(low=-np.ones(num_tubes), high=np.ones(num_tubes)), max_rotation)
     return np.concatenate((betas, alphas))
 
 
