@@ -4,7 +4,8 @@ from collections import OrderedDict
 KEY_ORDER = ['observation', 'achieved_goal', 'desired_goal']
 
 
-def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, tube_length, normalize_goals=False):
+def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tolerance, tube_length, noise_parameters,
+            normalize_goals=False):
     """
     :param tube_length:
     :param min_max_goal_tolerance:
@@ -15,10 +16,17 @@ def get_obs(joints, joint_representation, desired_goal, achieved_goal, goal_tole
     :param goal_tolerance: goal tolerance object
     :return: Observation of robot.
     """
+    # Noise parameters used for noise induced simulations
     num_tubes = len(tube_length)
     assert num_tubes in [2, 3]
+    extension_std_noise = np.full(num_tubes, noise_parameters['extension_std'])
+    rotation_std_noise = np.full(num_tubes, noise_parameters['rotation_std'])
+    q_std_noise = np.concatenate((extension_std_noise, rotation_std_noise))
+    tracking_std_noise = np.full(3, noise_parameters['tracking_std'])
     # Convert joints to egocentric representation
     joints = np.copy(joints)
+    joints = np.random.normal(joints, q_std_noise)
+    achieved_goal = np.random.normal(achieved_goal, tracking_std_noise)
     if joint_representation == 'egocentric':
         joints = prop2ego(joints)
 
