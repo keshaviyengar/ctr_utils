@@ -15,6 +15,15 @@ class Rendering(object):
         # Create a figure on screen and set the title
         fig = plt.figure()
         # Show the graph without blocking the rest of the program
+        plt.rcParams['keymap.save'].remove('s')
+        plt.rcParams['keymap.quit'].remove('q')
+        plt.rcParams['keymap.home'].remove('r')
+        plt.rcParams['keymap.xscale'].remove('k')
+        plt.rcParams['keymap.yscale'].remove('l')
+        plt.rcParams['keymap.zoom'].remove('o')
+        plt.rcParams['keymap.pan'].remove('p')
+        plt.rcParams['keymap.grid'].remove('g')
+        plt.rcParams['keymap.fullscreen'].remove('f')
         plt.show(block=False)
         self.ax3d = plt.axes(projection='3d')
 
