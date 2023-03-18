@@ -97,7 +97,7 @@ def normalize(x_min, x_max, x):
         return 2 * (x - x_min) / (x_max - x_min) - 1
 
 
-def apply_action(action, extension_limit, rotation_limit, joints, tube_length):
+def apply_action(action, extension_limit, rotation_limit, joints, tube_length, max_retraction, home_offset):
     """
     :param action: Selected change in joint values by agent
     :param joints: Joint configuration of robot
@@ -114,18 +114,20 @@ def apply_action(action, extension_limit, rotation_limit, joints, tube_length):
     action[:num_tubes] = action[:num_tubes] * extension_limit
     action[num_tubes:] = action[num_tubes:] * rotation_limit
     if num_tubes == 2:
+        # TODO: Implement for 2 tubes
         joints_low = np.array([-tube_length[0], -tube_length[1], -np.inf, -np.inf])
         joints_high = np.array([0.0, 0.0, np.inf, np.inf])
     else:
         joints_low = np.array([-tube_length[0], -tube_length[1], -tube_length[2], -np.inf, -np.inf, -np.inf])
-        joints_high = np.array([0.0, 0.0, 0.0, np.inf, np.inf, np.inf])
+        joints_high = np.array([-home_offset[0], -home_offset[1], -home_offset[2], np.inf, np.inf, np.inf])
     # Apply action and ensure within joint limits
     new_joints = np.clip(joints + action, joints_low, joints_high)
     # Check if extension joints are not colliding
     if num_tubes == 2:
+        # TODO: Implement for 2 tubes
         betas_U = B_to_B_U(new_joints[:num_tubes], tube_length[0], tube_length[1])
     else:
-        betas_U = B_to_B_U(new_joints[:num_tubes], tube_length[0], tube_length[1], tube_length[2])
+        betas_U = B_to_B_U(new_joints[:num_tubes] + home_offset, max_retraction[0], max_retraction[1], max_retraction[2])
     # Check if beta extension are within limits, if not, return old joints
     if not np.any(betas_U < -1.0) and not np.any(betas_U > 1.0):
         return new_joints
